@@ -1,0 +1,167 @@
+<style>
+	.print-format,
+	.print-format table,
+	.print-format tr,
+	.print-format td,
+	.print-format p,
+	.print-format div {
+		font-size: 9px;
+		line-height: 1; /* ضغط المسافات بين الأسطر */
+		padding: 0;
+		margin: 0;
+	}
+
+	.print-format table {
+		margin-top: 1px; /* تصغير المسافة فوق الجدول */
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.print-format hr {
+		margin: 2px 0; /* تصغير المسافة قبل وبعد الخط */
+		border-top: 1px dashed #000;
+	}
+
+	@media screen {
+		.print-format {
+			width: 72mm;
+			padding-left: 1mm;
+			padding-right: 1mm;
+			padding-top: 1mm;
+			padding-bottom: 1mm;
+		}
+	}
+
+	@media print {
+		.print-format {
+			padding-left: 1mm;
+			padding-right: 1mm;
+			padding-top: 1mm;
+			padding-bottom: 1mm;
+		}
+	}
+
+	.text-center { text-align: center; }
+	.text-right { text-align: right; }
+	.no-border td { border: none !important; padding: 0; }
+	small { line-height: 1; }
+</style>
+
+{% if letter_head %}
+	{{ letter_head }}
+{% endif %}
+
+<p class="text-center">
+	<b>{{ doc.company }}</b><br>
+	<b>TAX INVOICE / فاتورة ضريبية</b><br>
+	<b>Company TRN: </b> {{ doc.company_trn }}
+</p>
+
+<hr>
+
+<p>
+	<b>Receipt / رقم:</b> {{ doc.name }}<br>
+	<b>Cashier / كاشير:</b> {{ doc.owner }}<br>
+	<b>Customer / العميل:</b> {{ doc.customer_name }}<br>
+	<b>Date / التاريخ:</b>
+	{{ doc.get_formatted("posting_date") }} {{ doc.get_formatted("posting_time") }}
+</p>
+
+<hr>
+
+<table class="table table-condensed">
+	<thead>
+		<tr>
+			<th width="50%">Item / الصنف</th>
+			<th width="20%" class="text-right">Qty / الكمية</th>
+			<th width="30%" class="text-right">
+				Amount inc. VAT/المبلغ شامل الضريبة
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+	{% for item in doc.items %}
+	<tr>
+		<td>
+			<b>{{ item.item_name }}</b>
+			{% if item.serial_no %}
+				<br><small>SN: {{ item.serial_no | replace("\n", ", ") }}</small>
+			{% endif %}
+		</td>
+		<td class="text-right">
+			{{ item.qty }}<br>@{{ item.get_formatted("rate") }}
+		</td>
+		<td class="text-right">
+			{{ item.get_formatted("amount") }}
+		</td>
+	</tr>
+	{% endfor %}
+	</tbody>
+</table>
+
+<hr>
+
+<table class="table table-condensed no-border">
+	<tbody>
+
+	<tr>
+		<td class="text-right" width="70%">
+			Total Before Tax<br>الإجمالي قبل الضريبة
+		</td>
+		<td class="text-right">
+			{{ doc.get_formatted("net_total") }}
+		</td>
+	</tr>
+
+	{% for row in doc.taxes %}
+	<tr>
+		<td class="text-right">
+			{{ row.description }} (ض.ق.م)
+		</td>
+		<td class="text-right">
+			{{ row.get_formatted("tax_amount", doc) }}
+		</td>
+	</tr>
+	{% endfor %}
+
+	<tr>
+		<td class="text-right">
+			<b> Total Inc. VAT الإجمالي شامل الضريبة</b>
+		</td>
+		<td class="text-right">
+			<b>{{ doc.get_formatted("grand_total") }}</b>
+		</td>
+	</tr>
+
+	{% for row in doc.payments %}
+	{% if row.amount and row.amount != 0 %}
+	<tr>
+		<td class="text-right">
+			{{ row.mode_of_payment }}<br>مدفوع / Paid
+		</td>
+		<td class="text-right">
+			{{ row.get_formatted("amount", doc) }}
+		</td>
+	</tr>
+	{% endif %}
+	{% endfor %}
+
+	{% if doc.change_amount %}
+	<tr>
+		<td class="text-right">
+			Change / الباقي
+		</td>
+		<td class="text-right">
+			{{ doc.get_formatted("change_amount") }}
+		</td>
+	</tr>
+	{% endif %}
+
+	</tbody>
+</table>
+
+<hr>
+
+<p class="text-center">
+	Thank you for your visit<br>شكراً لزيارتكم
+</p>
