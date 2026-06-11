@@ -1,0 +1,29 @@
+<b>Order:</b> {{ doc.name }}<br>
+<b>Customer:</b> {{ doc.customer_name }}<br>
+<b>Date:</b> {{ doc.get_formatted("posting_date") }}
+</p>
+<hr>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Qty</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+{% for item in doc.items %}
+<tr>
+<td>
+<b>{{ item.item_name }}</b>
+{% if item.serial_no %}<br><small>SN: {{ item.serial_no | replace("\n", ", ") }}</small>{% endif %}
+</td>
+<td class="text-right">{{ item.qty }}</td>
+<td>
+{% if item.notes %}{{ item.notes }}{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<hr>
